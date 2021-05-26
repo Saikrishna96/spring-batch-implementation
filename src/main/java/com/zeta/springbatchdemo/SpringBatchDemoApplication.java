@@ -1,10 +1,12 @@
 package com.zeta.springbatchdemo;
 
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 @SpringBootApplication
+@EnableBatchProcessing
 //@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
 //Spring Batch is a framework for building reliable and fault tolerance enterprise batch jobs.
 // It supports many features like restarting a failed batch,
