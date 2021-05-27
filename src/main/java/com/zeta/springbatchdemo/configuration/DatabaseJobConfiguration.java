@@ -2,6 +2,7 @@ package com.zeta.springbatchdemo.configuration;
 
 import com.zeta.springbatchdemo.lineAggregator.EmployeeLineAggregator;
 import com.zeta.springbatchdemo.mapper.EmployeeRowMapper;
+import com.zeta.springbatchdemo.mapper.UserFieldSetMapper;
 import com.zeta.springbatchdemo.mapper.UserRowMapper;
 import com.zeta.springbatchdemo.model.Employee;
 import com.zeta.springbatchdemo.model.User;
@@ -20,7 +21,10 @@ import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.support.PostgresPagingQueryProvider;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.batch.item.validator.ValidatingItemProcessor;
 import org.springframework.batch.repeat.RepeatStatus;
@@ -28,7 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.PathResource;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -38,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//@Configuration
+@Configuration
 public class DatabaseJobConfiguration {
 
     @Autowired
@@ -80,6 +86,26 @@ public class DatabaseJobConfiguration {
 
         reader.setQueryProvider(queryProvider);
 
+        return reader;
+    }
+
+    @Bean
+    public FlatFileItemReader<User> userFlatFileItemReader() {
+        System.out.println(" userFlatFileItemReader started");
+        FlatFileItemReader<User> reader = new FlatFileItemReader<>();
+        reader.setResource(new PathResource("/Users/sk/Downloads/sample.csv"));
+
+        DefaultLineMapper<User> userDefaultLineMapper = new DefaultLineMapper<>();
+
+        DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
+        tokenizer.setNames(new String[] {"userId", "userName", "firstName",
+                "lastName", "gender", "password", "status"});
+
+        userDefaultLineMapper.setLineTokenizer(tokenizer);
+        userDefaultLineMapper.setFieldSetMapper(new UserFieldSetMapper());
+        userDefaultLineMapper.afterPropertiesSet();
+
+        reader.setLineMapper(userDefaultLineMapper);
         return reader;
     }
 
@@ -143,6 +169,15 @@ public class DatabaseJobConfiguration {
         };
     }
 
+    public ItemWriter<User> userItemWriter() {
+        System.out.println("userItemWriter started");
+        return items -> {
+            for (User user : items) {
+                System.out.println(user.toString());
+            }
+        };
+    }
+
 //    @Bean
 //    @StepScope
     public Tasklet tasklet(@Value("#{jobParameters['name']}") String name) {
@@ -152,11 +187,12 @@ public class DatabaseJobConfiguration {
         };
     }
 
-//    @Bean
+    @Bean
     public Step step1() throws Exception {
         System.out.println("Step1 is initiated");
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
                 .<User, User>chunk(2)
+                .reader(userFlatFileItemReader())
 //                .reader(cursorItemReader())
 //                .reader(pagingItemReader())
 //                .processor(upperCaseItemProcessor())
@@ -164,10 +200,11 @@ public class DatabaseJobConfiguration {
 //                .processor(filteringItemProcessor())
 //                .processor(compositeItemProcessor())
 //                .writer(employeeFlatFileItemWriter())
+                .writer(userItemWriter())
                 .build();
     }
 
-//    @Bean("employeeJob")
+    @Bean("employeeJob")
     public Job job() throws Exception {
         return jobBuilderFactory.get("EmployeeJobNew" + LocalDateTime.now())
                 .start(step1())
