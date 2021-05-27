@@ -2,7 +2,9 @@ package com.zeta.springbatchdemo.configuration;
 
 import com.zeta.springbatchdemo.lineAggregator.EmployeeLineAggregator;
 import com.zeta.springbatchdemo.mapper.EmployeeRowMapper;
+import com.zeta.springbatchdemo.mapper.UserRowMapper;
 import com.zeta.springbatchdemo.model.Employee;
+import com.zeta.springbatchdemo.model.User;
 import com.zeta.springbatchdemo.processor.EmployeeValidator;
 import com.zeta.springbatchdemo.processor.FilteringItemProcessor;
 import com.zeta.springbatchdemo.processor.UpperCaseItemProcessor;
@@ -48,7 +50,7 @@ public class DatabaseJobConfiguration {
     @Autowired
     private DataSource dataSource;
 
-    @Bean
+//    @Bean
     public JdbcCursorItemReader<Employee> cursorItemReader() {
         JdbcCursorItemReader<Employee> reader = new JdbcCursorItemReader<>();
 
@@ -58,7 +60,7 @@ public class DatabaseJobConfiguration {
         return reader;
     }
 
-    @Bean
+//    @Bean
     public JdbcPagingItemReader<Employee> pagingItemReader() {
         System.out.println("Employee job item reader");
         JdbcPagingItemReader<Employee> reader = new JdbcPagingItemReader<>();
@@ -81,17 +83,17 @@ public class DatabaseJobConfiguration {
         return reader;
     }
 
-    @Bean
+//    @Bean
     public UpperCaseItemProcessor upperCaseItemProcessor() {
         return new UpperCaseItemProcessor();
     }
 
-    @Bean
+//    @Bean
     public FilteringItemProcessor filteringItemProcessor() {
         return new FilteringItemProcessor();
     }
 
-    @Bean
+//    @Bean
     public ValidatingItemProcessor<Employee> validatingItemProcessor() {
         ValidatingItemProcessor<Employee> validatingItemProcessor = new ValidatingItemProcessor<>(new EmployeeValidator());
         validatingItemProcessor.setFilter(true);
@@ -99,21 +101,21 @@ public class DatabaseJobConfiguration {
     }
 
     // all processors added here, validates, filter out & converts remaining to uppercase
-    @Bean
-    public CompositeItemProcessor<Employee, Employee> compositeItemProcessor() throws Exception {
-        List<ItemProcessor<Employee, Employee>> delegates = new ArrayList<>();
-        delegates.add(validatingItemProcessor());
+//    @Bean
+    public CompositeItemProcessor<User, User> compositeItemProcessor() throws Exception {
+        List<ItemProcessor<User, User>> delegates = new ArrayList<>();
+//        delegates.add(validatingItemProcessor());
         delegates.add(filteringItemProcessor());
         delegates.add(upperCaseItemProcessor());
 
-        CompositeItemProcessor<Employee, Employee> compositeItemProcessor = new CompositeItemProcessor<>();
+        CompositeItemProcessor<User, User> compositeItemProcessor = new CompositeItemProcessor<>();
         compositeItemProcessor.setDelegates(delegates);
         compositeItemProcessor.afterPropertiesSet();
 
         return compositeItemProcessor;
     }
 
-    @Bean
+//    @Bean
     public FlatFileItemWriter<Employee> employeeFlatFileItemWriter() throws Exception {
         System.out.println("Employee job item writer");
         FlatFileItemWriter<Employee> itemWriter = new FlatFileItemWriter<>();
@@ -141,8 +143,8 @@ public class DatabaseJobConfiguration {
         };
     }
 
-    @Bean
-    @StepScope
+//    @Bean
+//    @StepScope
     public Tasklet tasklet(@Value("#{jobParameters['name']}") String name) {
         return (stepContribution, chunkContext) -> {
             System.out.println(String.format("The job ran for name : %s", name));
@@ -150,29 +152,29 @@ public class DatabaseJobConfiguration {
         };
     }
 
-    @Bean
+//    @Bean
     public Step step1() throws Exception {
         System.out.println("Step1 is initiated");
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
-                .<Employee, Employee>chunk(2)
+                .<User, User>chunk(2)
 //                .reader(cursorItemReader())
-                .reader(pagingItemReader())
+//                .reader(pagingItemReader())
 //                .processor(upperCaseItemProcessor())
 //                .processor(validatingItemProcessor())
 //                .processor(filteringItemProcessor())
-                .processor(compositeItemProcessor())
-                .writer(employeeFlatFileItemWriter())
+//                .processor(compositeItemProcessor())
+//                .writer(employeeFlatFileItemWriter())
                 .build();
     }
 
-    @Bean("employeeJob")
+//    @Bean("employeeJob")
     public Job job() throws Exception {
         return jobBuilderFactory.get("EmployeeJobNew" + LocalDateTime.now())
                 .start(step1())
                 .build();
     }
 
-    @Bean("jobToLaunch")
+//    @Bean("jobToLaunch")
     public Job jobToLaunch() throws Exception {
         return jobBuilderFactory.get("SampleJob" + LocalDateTime.now())
                 .start(stepBuilderFactory.get("newStep")

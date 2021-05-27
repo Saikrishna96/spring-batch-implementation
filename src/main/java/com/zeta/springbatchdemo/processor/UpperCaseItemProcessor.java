@@ -1,16 +1,20 @@
 package com.zeta.springbatchdemo.processor;
 
-import com.zeta.springbatchdemo.model.Employee;
+import com.zeta.springbatchdemo.model.User;
 import org.springframework.batch.item.ItemProcessor;
 
 
-public class UpperCaseItemProcessor implements ItemProcessor<Employee, Employee> {
+public class UpperCaseItemProcessor implements ItemProcessor<User, User> {
 
     @Override
-    public Employee process(Employee employee) throws Exception {
-        return new Employee(employee.getId(),
-                employee.getEmailAddress(),
-                employee.getFirstName().toUpperCase(),
-                employee.getLastName().toUpperCase());
+    public User process(User user) throws Exception {
+
+        return new User(user.getUserId(),
+                user.getUserName(),
+                user.getFirstName().toUpperCase(),
+                user.getLastName().toUpperCase(),
+                user.getGender(),
+                user.getPassword(),
+                user.getStatus());
     }
 }
