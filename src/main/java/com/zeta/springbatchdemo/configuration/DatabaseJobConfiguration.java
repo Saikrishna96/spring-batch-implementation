@@ -96,7 +96,7 @@ public class DatabaseJobConfiguration {
     public FlatFileItemReader<User> userFlatFileItemReader() {
         System.out.println(" userFlatFileItemReader started");
         FlatFileItemReader<User> reader = new FlatFileItemReader<>();
-        reader.setResource(new PathResource("/Users/sk/Downloads/sample.csv"));
+        reader.setResource(new PathResource("/Users/sk/Downloads/spring_batch_user_data.csv"));
 
         DefaultLineMapper<User> userDefaultLineMapper = new DefaultLineMapper<>();
 
@@ -208,7 +208,7 @@ public class DatabaseJobConfiguration {
     public Step step1() throws Exception {
         System.out.println("Step1 is initiated");
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
-                .<User, User>chunk(1000)
+                .<User, User>chunk(100000)
                 .reader(userFlatFileItemReader())
 //                .reader(cursorItemReader())
 //                .reader(pagingItemReader())
