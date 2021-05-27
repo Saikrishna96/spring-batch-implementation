@@ -51,6 +51,8 @@ public class JobLaunchService {
     @Autowired
     private DataSource dataSource;
 
+    // NOTE creating this as method in this class didn't work.
+    // Enabled it as Bean and autowired, then it worked.
     @Autowired
     JdbcPagingItemReader<User> userDataPagingItemReader;
 
@@ -78,7 +80,7 @@ public class JobLaunchService {
 
     public Step userJobstep() throws Exception {
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
-                .<User, User>chunk(10000)
+                .<User, User>chunk(1000)
 //                .reader(cursorItemReader())
                 .reader(userDataPagingItemReader)
                 .processor(upperCaseItemProcessor())
@@ -98,25 +100,6 @@ public class JobLaunchService {
         return reader;
     }
 
-//    public JdbcPagingItemReader<User> userDataPagingItemReader() {
-//        System.out.println("User data job item reader");
-//        JdbcPagingItemReader<User> reader = new JdbcPagingItemReader<>();
-//
-//        reader.setDataSource(dataSource);
-//        reader.setFetchSize(10000);
-//        reader.setRowMapper(new UserRowMapper());
-//
-//        PostgresPagingQueryProvider queryProvider = new PostgresPagingQueryProvider();
-//        queryProvider.setSelectClause("user_id, username, first_name, last_name, gender, password, status");
-//        queryProvider.setFromClause("from user_details");
-//
-//        Map<String, Order> sortKeys = new HashMap<>(1);
-//        sortKeys.put("user_id", Order.ASCENDING);
-//        queryProvider.setSortKeys(sortKeys);
-//
-//        reader.setQueryProvider(queryProvider);
-//        return reader;
-//    }
 
     public UpperCaseItemProcessor upperCaseItemProcessor() {
         return new UpperCaseItemProcessor();

@@ -92,7 +92,7 @@ public class DatabaseJobConfiguration {
         return reader;
     }
 
-    @Bean
+//    @Bean
     public FlatFileItemReader<User> userFlatFileItemReader() {
         System.out.println(" userFlatFileItemReader started");
         FlatFileItemReader<User> reader = new FlatFileItemReader<>();
@@ -163,7 +163,7 @@ public class DatabaseJobConfiguration {
         return itemWriter;
     }
 
-    @Bean
+//    @Bean
     public JdbcBatchItemWriter<User> userJdbcBatchItemWriter() {
         JdbcBatchItemWriter<User> writer = new JdbcBatchItemWriter<>();
 
@@ -222,7 +222,7 @@ public class DatabaseJobConfiguration {
                 .build();
     }
 
-    @Bean("employeeJob")
+//    @Bean("employeeJob")
     public Job job() throws Exception {
         return jobBuilderFactory.get("EmployeeJobNew" + LocalDateTime.now())
                 .start(step1())

@@ -30,12 +30,17 @@ public class UserDataJobConfiguration {
         JdbcPagingItemReader<User> reader = new JdbcPagingItemReader<>();
 
         reader.setDataSource(dataSource);
-        reader.setFetchSize(50000);
+        reader.setFetchSize(100000);
         reader.setRowMapper(new UserRowMapper());
+
+        //NOTE not to be used in prod. Just for testing.
+//        reader.setMaxItemCount(500000);
+//        reader.setCurrentItemCount(100);// Index for the current item. Used on restarts to indicate where to start from
 
         PostgresPagingQueryProvider queryProvider = new PostgresPagingQueryProvider();
         queryProvider.setSelectClause("user_id, username, first_name, last_name, gender, password, status");
         queryProvider.setFromClause("from user_details");
+
 
         Map<String, Order> sortKeys = new HashMap<>(1);
         sortKeys.put("user_id", Order.ASCENDING);

@@ -9,11 +9,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class UpperCaseItemProcessor implements ItemProcessor<User, User> {
 
 //    NOTE used this counter for adding more entries to db table user_details
-    AtomicInteger counter = new AtomicInteger(901115);
+//    AtomicInteger counter = new AtomicInteger(901115);
     @Override
     public User process(User user) throws Exception {
-        System.out.println("processing : " + counter.get());
-        return new User(counter.getAndIncrement(),
+//        System.out.println("processing : " + counter.get());
+        return new User(user.getUserId(),
                 user.getUserName(),
                 user.getFirstName().toUpperCase(),
                 user.getLastName().toUpperCase(),
