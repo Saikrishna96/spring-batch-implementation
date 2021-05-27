@@ -3,6 +3,7 @@ package com.zeta.springbatchdemo.configuration;
 import com.zeta.springbatchdemo.lineAggregator.EmployeeLineAggregator;
 import com.zeta.springbatchdemo.mapper.EmployeeRowMapper;
 import com.zeta.springbatchdemo.mapper.UserFieldSetMapper;
+import com.zeta.springbatchdemo.mapper.UserPreparedStatementSetter;
 import com.zeta.springbatchdemo.mapper.UserRowMapper;
 import com.zeta.springbatchdemo.model.Employee;
 import com.zeta.springbatchdemo.model.User;
@@ -17,6 +18,8 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
@@ -160,6 +163,20 @@ public class DatabaseJobConfiguration {
         return itemWriter;
     }
 
+    @Bean
+    public JdbcBatchItemWriter<User> userJdbcBatchItemWriter() {
+        JdbcBatchItemWriter<User> writer = new JdbcBatchItemWriter<>();
+
+         final String QUERY_INSERT_USER = "INSERT " +
+                "INTO user_details(user_id, username, first_name, last_name, gender, password, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        writer.setDataSource(dataSource);
+        writer.setSql(QUERY_INSERT_USER);
+        writer.setItemPreparedStatementSetter(new UserPreparedStatementSetter());
+        writer.afterPropertiesSet();
+        return writer;
+    }
+
 //    @Bean
     public ItemWriter<Employee> employeeItemWriter() {
         return items -> {
@@ -191,16 +208,17 @@ public class DatabaseJobConfiguration {
     public Step step1() throws Exception {
         System.out.println("Step1 is initiated");
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
-                .<User, User>chunk(2)
+                .<User, User>chunk(1000)
                 .reader(userFlatFileItemReader())
 //                .reader(cursorItemReader())
 //                .reader(pagingItemReader())
-//                .processor(upperCaseItemProcessor())
+                .processor(upperCaseItemProcessor())
 //                .processor(validatingItemProcessor())
 //                .processor(filteringItemProcessor())
 //                .processor(compositeItemProcessor())
 //                .writer(employeeFlatFileItemWriter())
-                .writer(userItemWriter())
+//                .writer(userItemWriter())
+                .writer(userJdbcBatchItemWriter())
                 .build();
     }
 
