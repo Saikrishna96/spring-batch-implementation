@@ -41,7 +41,6 @@ public class UserDataJobConfiguration {
         queryProvider.setSelectClause("user_id, username, first_name, last_name, gender, password, status");
         queryProvider.setFromClause("from user_details");
 
-
         Map<String, Order> sortKeys = new HashMap<>(1);
         sortKeys.put("user_id", Order.ASCENDING);
         queryProvider.setSortKeys(sortKeys);

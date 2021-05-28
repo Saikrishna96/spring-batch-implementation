@@ -14,6 +14,8 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.integration.async.AsyncItemProcessor;
+import org.springframework.batch.integration.async.AsyncItemWriter;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
@@ -23,7 +25,9 @@ import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.batch.item.validator.ValidatingItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -80,14 +84,18 @@ public class JobLaunchService {
 
     public Step userJobstep() throws Exception {
         return stepBuilderFactory.get("step1" + LocalDateTime.now())
-                .<User, User>chunk(1000)
+                .<User, User>chunk(20000)
 //                .reader(cursorItemReader())
                 .reader(userDataPagingItemReader)
                 .processor(upperCaseItemProcessor())
+//                .processor(asyncItemProcessor())// system got hung for many sec
 //                .processor(validatingItemProcessor())
 //                .processor(filteringItemProcessor())
 //                .processor(compositeItemProcessor())
                 .writer(userDataFlatFileItemWriter())
+//                .writer(asyncItemWriter()) // system got hung for many sec
+//                .taskExecutor(new SimpleAsyncTaskExecutor()) // runs every chunk in a new thread, not very good for production
+                // Not much improvement with SimpleAsyncTaskExecutor()
                 .build();
     }
 
@@ -100,6 +108,25 @@ public class JobLaunchService {
         return reader;
     }
 
+    public AsyncItemProcessor asyncItemProcessor() throws Exception{
+        AsyncItemProcessor<User, User> asyncItemProcessor = new AsyncItemProcessor<>();
+
+        asyncItemProcessor.setDelegate(upperCaseItemProcessor());
+        //TODO use ThreadPoolTaskExecutor
+        asyncItemProcessor.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        asyncItemProcessor.afterPropertiesSet();
+
+        return asyncItemProcessor;
+    }
+
+    public AsyncItemWriter<User> asyncItemWriter() throws Exception{
+        AsyncItemWriter<User> asyncItemWriter = new AsyncItemWriter<>();
+
+        asyncItemWriter.setDelegate(userDataFlatFileItemWriter());
+        asyncItemWriter.afterPropertiesSet();
+
+        return asyncItemWriter;
+    }
 
     public UpperCaseItemProcessor upperCaseItemProcessor() {
         return new UpperCaseItemProcessor();
